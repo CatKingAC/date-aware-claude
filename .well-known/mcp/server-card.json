@@ -1,0 +1,30 @@
+{
+  "name": "date-aware-claude",
+  "version": "1.0.0",
+  "description": "An MCP server that gives Claude reliable access to the current date and time.",
+  "tools": [
+    {
+      "name": "get_today",
+      "description": "Return today's date, current time, and weekday in the resolved timezone.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "timezone": { "type": "string" }
+        }
+      }
+    },
+    {
+      "name": "convert_timezone",
+      "description": "Convert a datetime from one timezone to another.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "datetime_str": { "type": "string" },
+          "to_timezone": { "type": "string" },
+          "from_timezone": { "type": "string" }
+        },
+        "required": ["datetime_str", "to_timezone"]
+      }
+    }
+  ]
+}
