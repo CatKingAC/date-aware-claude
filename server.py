@@ -5,7 +5,7 @@ Uses UTC internally; converts to the requested IANA timezone on output.
 """
 from __future__ import annotations
 
-from datetime import datetime, timezone as _timezone
+from datetime import datetime
 from zoneinfo import ZoneInfo
 
 from mcp.server.fastmcp import FastMCP
@@ -17,11 +17,18 @@ mcp = FastMCP("date-aware-claude")
 
 @mcp.tool()
 def get_today(timezone: str | None = None) -> dict:
-    """Return today's date, current time, and weekday.
+    """Return today's date, current time, and weekday in the resolved timezone.
 
     Call this before any relative-date computation ("next Monday",
     "in 3 weeks", "end of month"). The session's injected date may be
     stale — this tool always reads the real clock.
+
+    Returns a dict with keys:
+      date      — "YYYY-MM-DD"
+      time      — "HH:MM:SS"
+      datetime  — "YYYY-MM-DD HH:MM:SS"
+      weekday   — full English name, e.g. "Friday"
+      timezone  — IANA timezone name, e.g. "America/New_York"
     """
     tz = resolve_default_timezone(explicit=timezone)
     now = datetime.now(tz)
@@ -30,7 +37,7 @@ def get_today(timezone: str | None = None) -> dict:
         "time": now.strftime("%H:%M:%S"),
         "datetime": now.strftime("%Y-%m-%d %H:%M:%S"),
         "weekday": now.strftime("%A"),
-        "timezone": str(tz),
+        "timezone": tz.key if isinstance(tz, ZoneInfo) else str(tz),
     }
 
 
