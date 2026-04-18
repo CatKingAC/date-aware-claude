@@ -13,10 +13,20 @@ from datetime import datetime, timezone
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 
+def _get_system_tz() -> "ZoneInfo | timezone | None":
+    """Return the local system timezone, or None if detection fails."""
+    return datetime.now().astimezone().tzinfo
+
+
 def resolve_default_timezone(explicit: str | None = None) -> ZoneInfo | timezone:
     """Resolve which timezone to use, following the PRD fallback chain."""
-    if explicit:
-        return ZoneInfo(explicit)
+    if explicit is not None:
+        stripped = explicit.strip()
+        if not stripped:
+            raise ValueError(f"explicit timezone must not be blank; got {explicit!r}")
+        # ZoneInfoNotFoundError propagates intentionally: an invalid explicit
+        # timezone is a caller error and should fail loudly.
+        return ZoneInfo(stripped)
 
     env_tz = os.environ.get("DEFAULT_TIMEZONE")
     if env_tz:
@@ -25,7 +35,7 @@ def resolve_default_timezone(explicit: str | None = None) -> ZoneInfo | timezone
         except ZoneInfoNotFoundError:
             pass
 
-    system_tz = datetime.now().astimezone().tzinfo
+    system_tz = _get_system_tz()
     if system_tz is not None:
         return system_tz
 
