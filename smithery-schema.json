@@ -1,0 +1,32 @@
+{
+  "type": "object",
+  "properties": {
+    "timezone": {
+      "type": "string",
+      "title": "Default Timezone",
+      "description": "Select the timezone used for dates and times returned by this server.",
+      "enum": [
+        "America/New_York",
+        "America/Chicago",
+        "America/Denver",
+        "America/Los_Angeles",
+        "America/Sao_Paulo",
+        "Europe/London",
+        "Europe/Paris",
+        "Europe/Moscow",
+        "Asia/Dubai",
+        "Asia/Kolkata",
+        "Asia/Singapore",
+        "Asia/Shanghai",
+        "Asia/Tokyo",
+        "Australia/Sydney",
+        "Pacific/Auckland",
+        "Africa/Cairo",
+        "Africa/Lagos",
+        "UTC"
+      ],
+      "default": "America/New_York"
+    }
+  },
+  "required": ["timezone"]
+}
