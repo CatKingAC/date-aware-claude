@@ -23,4 +23,8 @@ requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
+# server.py and tz.py are created in Tasks 3–4
 py-modules = ["server", "tz"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

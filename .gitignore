@@ -9,3 +9,7 @@ dist/
 build/
 .env
 .DS_Store
+*.log
+htmlcov/
+.coverage
+Thumbs.db
