@@ -4,7 +4,9 @@ from datetime import datetime
 from unittest.mock import patch
 from zoneinfo import ZoneInfo
 
-from server import get_today
+import pytest
+
+from server import convert_timezone, get_today
 
 
 def test_get_today_explicit_timezone_tokyo():
@@ -43,14 +45,10 @@ def test_get_today_no_args_returns_valid_response(monkeypatch):
     assert result["timezone"]  # non-empty string
 
 
-import pytest
-from server import convert_timezone
-
-
 def test_convert_timezone_naive_input():
     """Naive datetime + from_timezone → converts to to_timezone."""
     result = convert_timezone(
-        datetime="2026-04-17 09:00:00",
+        datetime_str="2026-04-17 09:00:00",
         from_timezone="America/New_York",
         to_timezone="America/Los_Angeles",
     )
@@ -64,7 +62,7 @@ def test_convert_timezone_naive_input():
 def test_convert_timezone_iso_with_offset():
     """ISO 8601 with offset ignores from_timezone."""
     result = convert_timezone(
-        datetime="2026-04-17T09:00:00-04:00",
+        datetime_str="2026-04-17T09:00:00-04:00",
         to_timezone="Asia/Tokyo",
         from_timezone="SHOULD_BE_IGNORED",
     )
@@ -76,7 +74,7 @@ def test_convert_timezone_iso_with_offset():
 def test_convert_timezone_missing_from_raises():
     with pytest.raises(ValueError, match="from_timezone is required"):
         convert_timezone(
-            datetime="2026-04-17 09:00:00",
+            datetime_str="2026-04-17 09:00:00",
             to_timezone="UTC",
         )
 
@@ -84,9 +82,31 @@ def test_convert_timezone_missing_from_raises():
 def test_convert_timezone_dst_fallback_first_occurrence():
     """Ambiguous fall-back hour resolves to the first (pre-DST) occurrence."""
     result = convert_timezone(
-        datetime="2026-11-01 01:30:00",
+        datetime_str="2026-11-01 01:30:00",
         from_timezone="America/New_York",
         to_timezone="UTC",
     )
     # First occurrence is EDT (UTC-4), so 01:30 EDT → 05:30 UTC.
     assert result["converted"] == "2026-11-01 05:30:00"
+
+
+def test_convert_timezone_z_suffix():
+    """ISO 8601 with Z suffix (UTC) converts correctly."""
+    result = convert_timezone(
+        datetime_str="2026-04-17T13:00:00Z",
+        to_timezone="America/New_York",
+    )
+    # 13:00 UTC → 09:00 EDT (UTC-4) on 2026-04-17
+    assert result["converted"] == "2026-04-17 09:00:00"
+    assert result["converted_timezone"] == "America/New_York"
+
+
+def test_convert_timezone_dst_spring_forward_gap():
+    """Spring-forward non-existent hour uses pre-transition offset (EST, UTC-5)."""
+    result = convert_timezone(
+        datetime_str="2026-03-08 02:30:00",
+        from_timezone="America/New_York",
+        to_timezone="UTC",
+    )
+    # 02:30 with EST offset (UTC-5) → 07:30 UTC
+    assert result["converted"] == "2026-03-08 07:30:00"
