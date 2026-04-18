@@ -1,7 +1,8 @@
 {
-  "name": "date-aware-claude",
-  "version": "1.0.0",
-  "description": "An MCP server that gives Claude reliable access to the current date and time.",
+  "serverInfo": {
+    "name": "date-aware-claude",
+    "version": "1.0.0"
+  },
   "tools": [
     {
       "name": "get_today",
@@ -26,5 +27,7 @@
         "required": ["datetime_str", "to_timezone"]
       }
     }
-  ]
+  ],
+  "resources": [],
+  "prompts": []
 }
