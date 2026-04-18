@@ -41,3 +41,52 @@ def test_get_today_no_args_returns_valid_response(monkeypatch):
     assert re.fullmatch(r"\d{4}-\d{2}-\d{2}", result["date"])
     assert re.fullmatch(r"\d{2}:\d{2}:\d{2}", result["time"])
     assert result["timezone"]  # non-empty string
+
+
+import pytest
+from server import convert_timezone
+
+
+def test_convert_timezone_naive_input():
+    """Naive datetime + from_timezone → converts to to_timezone."""
+    result = convert_timezone(
+        datetime="2026-04-17 09:00:00",
+        from_timezone="America/New_York",
+        to_timezone="America/Los_Angeles",
+    )
+    assert result["original"] == "2026-04-17 09:00:00"
+    assert result["original_timezone"] == "America/New_York"
+    assert result["converted"] == "2026-04-17 06:00:00"
+    assert result["converted_timezone"] == "America/Los_Angeles"
+    assert result["weekday"] == "Friday"
+
+
+def test_convert_timezone_iso_with_offset():
+    """ISO 8601 with offset ignores from_timezone."""
+    result = convert_timezone(
+        datetime="2026-04-17T09:00:00-04:00",
+        to_timezone="Asia/Tokyo",
+        from_timezone="SHOULD_BE_IGNORED",
+    )
+    # 09:00 EDT → 22:00 JST same day
+    assert result["converted"] == "2026-04-17 22:00:00"
+    assert result["converted_timezone"] == "Asia/Tokyo"
+
+
+def test_convert_timezone_missing_from_raises():
+    with pytest.raises(ValueError, match="from_timezone is required"):
+        convert_timezone(
+            datetime="2026-04-17 09:00:00",
+            to_timezone="UTC",
+        )
+
+
+def test_convert_timezone_dst_fallback_first_occurrence():
+    """Ambiguous fall-back hour resolves to the first (pre-DST) occurrence."""
+    result = convert_timezone(
+        datetime="2026-11-01 01:30:00",
+        from_timezone="America/New_York",
+        to_timezone="UTC",
+    )
+    # First occurrence is EDT (UTC-4), so 01:30 EDT → 05:30 UTC.
+    assert result["converted"] == "2026-11-01 05:30:00"
