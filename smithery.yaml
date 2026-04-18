@@ -1,6 +1,7 @@
 startCommand:
   type: stdio
   configSchema:
+    type: object
     properties:
       timezone:
         type: string
@@ -14,19 +15,23 @@ startCommand:
           - "America/Sao_Paulo"
           - "Europe/London"
           - "Europe/Paris"
+          - "Europe/Moscow"
           - "Asia/Dubai"
           - "Asia/Kolkata"
           - "Asia/Singapore"
           - "Asia/Shanghai"
           - "Asia/Tokyo"
           - "Australia/Sydney"
+          - "Pacific/Auckland"
+          - "Africa/Cairo"
+          - "Africa/Lagos"
           - "UTC"
         default: "America/New_York"
     required:
       - timezone
   commandFunction: |
     (config) => ({
-      command: "python",
-      args: ["server.py"],
+      command: "date-aware-claude",
+      args: [],
       env: { DEFAULT_TIMEZONE: config.timezone }
     })
