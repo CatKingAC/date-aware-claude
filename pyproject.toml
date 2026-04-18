@@ -1,0 +1,26 @@
+[project]
+name = "date-aware-claude"
+version = "1.0.0"
+description = "An MCP server that gives Claude reliable access to the current date and time."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Anjian Chen" }]
+dependencies = [
+  "mcp[cli]>=1.0.0"
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=7.0"
+]
+
+[project.scripts]
+date-aware-claude = "server:main"
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+py-modules = ["server", "tz"]
