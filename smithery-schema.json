@@ -28,5 +28,5 @@
       "default": "America/New_York"
     }
   },
-  "required": ["timezone"]
+  "required": []
 }

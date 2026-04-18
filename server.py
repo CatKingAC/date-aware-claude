@@ -6,9 +6,11 @@ Uses UTC internally; converts to the requested IANA timezone on output.
 from __future__ import annotations
 
 from datetime import datetime
+from typing import Annotated
 from zoneinfo import ZoneInfo
 
 from mcp.server.fastmcp import FastMCP
+from pydantic import Field
 
 from tz import resolve_default_timezone
 
@@ -16,7 +18,12 @@ mcp = FastMCP("date-aware-claude")
 
 
 @mcp.tool()
-def get_today(timezone: str | None = None) -> dict:
+def get_today(
+    timezone: Annotated[
+        str | None,
+        Field(description="IANA timezone name, e.g. 'America/New_York' or 'Asia/Tokyo'. Omit to use the server's configured default timezone."),
+    ] = None,
+) -> dict:
     """Return today's date, current time, and weekday in the resolved timezone.
 
     Call this before any relative-date computation ("next Monday",
@@ -43,9 +50,18 @@ def get_today(timezone: str | None = None) -> dict:
 
 @mcp.tool()
 def convert_timezone(
-    datetime_str: str,
-    to_timezone: str,
-    from_timezone: str | None = None,
+    datetime_str: Annotated[
+        str,
+        Field(description="Datetime to convert. Either 'YYYY-MM-DD HH:MM:SS' (naive, requires from_timezone) or ISO 8601 with offset e.g. '2026-04-17T09:00:00-04:00'."),
+    ],
+    to_timezone: Annotated[
+        str,
+        Field(description="Target IANA timezone name, e.g. 'Europe/London' or 'Asia/Shanghai'."),
+    ],
+    from_timezone: Annotated[
+        str | None,
+        Field(description="Source IANA timezone name. Required when datetime_str has no UTC offset. Ignored when datetime_str includes an offset."),
+    ] = None,
 ) -> dict:
     """Convert a datetime from one timezone to another.
 

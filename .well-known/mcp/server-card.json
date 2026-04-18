@@ -7,22 +7,44 @@
     {
       "name": "get_today",
       "description": "Return today's date, current time, and weekday in the resolved timezone.",
+      "annotations": {
+        "readOnlyHint": true,
+        "idempotentHint": false,
+        "openWorldHint": false
+      },
       "inputSchema": {
         "type": "object",
         "properties": {
-          "timezone": { "type": "string" }
+          "timezone": {
+            "type": "string",
+            "description": "IANA timezone name, e.g. 'America/New_York' or 'Asia/Tokyo'. Omit to use the server's configured default timezone."
+          }
         }
       }
     },
     {
       "name": "convert_timezone",
       "description": "Convert a datetime from one timezone to another.",
+      "annotations": {
+        "readOnlyHint": true,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
       "inputSchema": {
         "type": "object",
         "properties": {
-          "datetime_str": { "type": "string" },
-          "to_timezone": { "type": "string" },
-          "from_timezone": { "type": "string" }
+          "datetime_str": {
+            "type": "string",
+            "description": "Datetime to convert. Either 'YYYY-MM-DD HH:MM:SS' (naive, requires from_timezone) or ISO 8601 with offset e.g. '2026-04-17T09:00:00-04:00'."
+          },
+          "to_timezone": {
+            "type": "string",
+            "description": "Target IANA timezone name, e.g. 'Europe/London' or 'Asia/Shanghai'."
+          },
+          "from_timezone": {
+            "type": "string",
+            "description": "Source IANA timezone name. Required when datetime_str has no UTC offset. Ignored when datetime_str includes an offset."
+          }
         },
         "required": ["datetime_str", "to_timezone"]
       }
