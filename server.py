@@ -5,7 +5,7 @@ Uses UTC internally; converts to the requested IANA timezone on output.
 """
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timedelta, date
 from typing import Annotated
 from zoneinfo import ZoneInfo
 
@@ -109,6 +109,73 @@ def convert_timezone(
         "converted": target.strftime("%Y-%m-%d %H:%M:%S"),
         "converted_timezone": to_timezone,
         "weekday": target.strftime("%A"),
+    }
+
+
+@mcp.tool()
+def get_business_days(
+    date_from: Annotated[
+        str,
+        Field(description="Start date in YYYY-MM-DD format."),
+    ],
+    date_to: Annotated[
+        str,
+        Field(description="End date in YYYY-MM-DD format."),
+    ],
+    inclusive: Annotated[
+        bool,
+        Field(description="If true, both endpoints count. If false, the half-open range [date_from, date_to) is used. Default true (matches Excel NETWORKDAYS)."),
+    ] = True,
+) -> dict:
+    """Count business days (Monday–Friday) between two dates.
+
+    Counts weekdays only — does NOT skip public holidays.
+
+    If `date_to` is earlier than `date_from`, the tool internally swaps
+    them and still returns a non-negative `business_days` count. The
+    `date_from` and `date_to` fields in the output are echoed back as
+    the caller passed them (NOT swapped), so the caller can detect the
+    reversed-order case by comparing them.
+
+    Returns a dict with keys:
+      date_from      — echoed as passed
+      date_to        — echoed as passed
+      business_days  — Mon–Fri days in the range (>= 0)
+      weekend_days   — Sat + Sun days in the range (>= 0)
+      total_days     — business_days + weekend_days
+    """
+    d_from = datetime.strptime(date_from, "%Y-%m-%d").date()
+    d_to = datetime.strptime(date_to, "%Y-%m-%d").date()
+
+    # Swap working copies so we always iterate forward.
+    if d_to < d_from:
+        start, end = d_to, d_from
+    else:
+        start, end = d_from, d_to
+
+    # Adjust the iteration end based on `inclusive`.
+    if inclusive:
+        last = end
+    else:
+        last = end - timedelta(days=1)
+
+    business = 0
+    weekend = 0
+    cur = start
+    while cur <= last:
+        # weekday(): Monday=0 ... Sunday=6. Saturday/Sunday are 5 and 6.
+        if cur.weekday() >= 5:
+            weekend += 1
+        else:
+            business += 1
+        cur += timedelta(days=1)
+
+    return {
+        "date_from": date_from,   # echoed as passed (NOT swapped)
+        "date_to": date_to,
+        "business_days": business,
+        "weekend_days": weekend,
+        "total_days": business + weekend,
     }
 
 
