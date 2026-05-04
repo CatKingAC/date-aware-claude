@@ -36,7 +36,9 @@ def resolve_default_timezone(explicit: str | None = None) -> ZoneInfo | timezone
             pass
 
     system_tz = _get_system_tz()
-    if system_tz is not None:
+    if isinstance(system_tz, ZoneInfo):
         return system_tz
-
+    # system_tz exists but isn't a ZoneInfo (e.g. a bare datetime.timezone
+    # offset, or a Windows verbose display name). We can't trust it to
+    # produce IANA-style identifiers downstream, so fall through to UTC.
     return timezone.utc
