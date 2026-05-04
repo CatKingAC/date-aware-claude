@@ -1,11 +1,11 @@
 """Date-Aware Claude — MCP server.
 
-Exposes two tools: get_today, convert_timezone.
+Exposes three tools: get_today, convert_timezone, get_business_days.
 Uses UTC internally; converts to the requested IANA timezone on output.
 """
 from __future__ import annotations
 
-from datetime import datetime, timedelta, date
+from datetime import datetime, timedelta
 from typing import Annotated
 from zoneinfo import ZoneInfo
 
