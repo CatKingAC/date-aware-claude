@@ -6,13 +6,46 @@ Uses UTC internally; converts to the requested IANA timezone on output.
 from __future__ import annotations
 
 from datetime import datetime, timedelta
-from typing import Annotated
+from typing import Annotated, TypedDict
 from zoneinfo import ZoneInfo
 
 from mcp.server.fastmcp import FastMCP
 from pydantic import Field
 
 from tz import resolve_default_timezone
+
+
+# --- Tool result types -------------------------------------------------------
+#
+# Declared as TypedDicts so FastMCP can emit an outputSchema for each tool.
+# TypedDicts are transparent dicts at runtime, so existing `return {...}`
+# statements keep working unchanged and existing tests keep passing.
+
+class GetTodayResult(TypedDict):
+    date: str
+    time: str
+    datetime: str
+    weekday: str
+    timezone: str
+
+
+class ConvertTimezoneResult(TypedDict):
+    original: str
+    original_timezone: str
+    converted: str
+    converted_timezone: str
+    weekday: str
+
+
+class GetBusinessDaysResult(TypedDict):
+    date_from: str
+    date_to: str
+    business_days: int
+    weekend_days: int
+    total_days: int
+
+
+# --- MCP server --------------------------------------------------------------
 
 mcp = FastMCP("date-aware-claude")
 
@@ -23,7 +56,7 @@ def get_today(
         str | None,
         Field(description="IANA timezone name, e.g. 'America/New_York' or 'Asia/Tokyo'. Omit to use the server's configured default timezone."),
     ] = None,
-) -> dict:
+) -> GetTodayResult:
     """Return today's date, current time, and weekday in the resolved timezone.
 
     Call this before any relative-date computation ("next Monday",
@@ -62,7 +95,7 @@ def convert_timezone(
         str | None,
         Field(description="Source IANA timezone name. Required when datetime_str has no UTC offset. Ignored when datetime_str includes an offset."),
     ] = None,
-) -> dict:
+) -> ConvertTimezoneResult:
     """Convert a datetime from one timezone to another.
 
     Accepts either a naive `YYYY-MM-DD HH:MM:SS` string (requires
@@ -126,7 +159,7 @@ def get_business_days(
         bool,
         Field(description="If true, both endpoints count. If false, the half-open range [date_from, date_to) is used. Default true (matches Excel NETWORKDAYS)."),
     ] = True,
-) -> dict:
+) -> GetBusinessDaysResult:
     """Count business days (Monday–Friday) between two dates.
 
     Counts weekdays only — does NOT skip public holidays.

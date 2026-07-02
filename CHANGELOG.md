@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   range is reversed (auto-swaps internally; echoes input dates unswapped so a
   caller can detect reversal). Counts weekdays only — does NOT skip public
   holidays.
+- All three tools now declare an `outputSchema` (via `TypedDict` return
+  annotations), so MCP clients can type-check tool responses. Recovers the
+  ~10-point Smithery Capability Quality deduction from the "Output schemas"
+  check without changing runtime behavior or breaking existing callers.
 
 ### Fixed
 - `get_today` no longer returns OS-level display names like `"Eastern Daylight
