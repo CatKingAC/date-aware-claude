@@ -1,5 +1,7 @@
 # Date-Aware Claude
 
+[![CI](https://github.com/CatKingAC/date-aware-claude/actions/workflows/ci.yml/badge.svg)](https://github.com/CatKingAC/date-aware-claude/actions/workflows/ci.yml)
+
 An MCP server that gives Claude reliable access to the current date and
 time.
 
