@@ -23,12 +23,17 @@ def test_env_var_used_when_no_explicit():
 
 
 def test_system_timezone_used_when_no_env_var(monkeypatch):
-    """If no explicit and no env var, use the system local timezone."""
+    """If no explicit and no env var, the system local timezone is used —
+    BUT only if it resolves to a ZoneInfo. We monkeypatch the resolver to
+    keep this test deterministic across platforms (a real Windows host or
+    Linux container often returns a non-ZoneInfo tzinfo, which is now
+    explicitly downgraded to UTC by the fallback chain)."""
     monkeypatch.delenv("DEFAULT_TIMEZONE", raising=False)
+    fake_zone = ZoneInfo("Europe/Berlin")
+    monkeypatch.setattr("tz._get_system_tz", lambda: fake_zone)
+
     result = resolve_default_timezone(explicit=None)
-    expected = datetime.now().astimezone().tzinfo
-    assert result is not None
-    assert result == expected
+    assert result == fake_zone
 
 
 def test_utc_fallback_when_no_system_tz(monkeypatch):
@@ -39,12 +44,15 @@ def test_utc_fallback_when_no_system_tz(monkeypatch):
     assert result == timezone.utc
 
 
-def test_invalid_env_var_falls_through_to_system():
-    """A bogus DEFAULT_TIMEZONE should not raise; it should fall through."""
+def test_invalid_env_var_falls_through_to_system(monkeypatch):
+    """A bogus DEFAULT_TIMEZONE should not raise; it should fall through to
+    the system path. We monkeypatch _get_system_tz to a known ZoneInfo so
+    the test is platform-deterministic."""
+    fake_zone = ZoneInfo("Australia/Sydney")
+    monkeypatch.setattr("tz._get_system_tz", lambda: fake_zone)
     with patch.dict(os.environ, {"DEFAULT_TIMEZONE": "Not/A_Real_Zone"}, clear=False):
         result = resolve_default_timezone(explicit=None)
-    expected = datetime.now().astimezone().tzinfo
-    assert result == expected
+    assert result == fake_zone
 
 
 def test_explicit_empty_string_raises():
@@ -57,3 +65,22 @@ def test_explicit_whitespace_only_raises():
     """A whitespace-only explicit should raise ValueError."""
     with pytest.raises(ValueError, match="must not be blank"):
         resolve_default_timezone(explicit="   ")
+
+
+def test_non_zoneinfo_system_tz_falls_to_utc(monkeypatch):
+    """A system tzinfo that is NOT a ZoneInfo (e.g. a bare datetime.timezone
+    offset on Windows or some Linux containers) must NOT be returned. We
+    fall through to UTC instead so downstream code never sees ugly display
+    names like 'Eastern Daylight Time'."""
+    from datetime import timedelta
+
+    monkeypatch.delenv("DEFAULT_TIMEZONE", raising=False)
+
+    fake_offset = timezone(timedelta(hours=-4), name="EDT-fake")
+    monkeypatch.setattr("tz._get_system_tz", lambda: fake_offset)
+
+    result = resolve_default_timezone(explicit=None)
+    assert result == timezone.utc, (
+        f"Expected UTC, got {result!r} (type {type(result).__name__}). "
+        "A non-ZoneInfo system tz should fall through to UTC."
+    )

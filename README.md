@@ -14,6 +14,7 @@ every call.
 |------|---------|
 | `get_today` | Returns today's date, time, and weekday in a given timezone |
 | `convert_timezone` | Converts a datetime from one timezone to another |
+| `get_business_days` | Counts Mon–Fri weekdays between two dates (no holiday handling) |
 
 ## Install — Smithery (one-click)
 
@@ -68,6 +69,10 @@ resolves which tz to use in this order:
 pip install -e ".[dev]"
 pytest -v
 ```
+
+## Changelog
+
+See [CHANGELOG.md](./CHANGELOG.md) for the release history.
 
 ## License
 
