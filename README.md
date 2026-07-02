@@ -1,6 +1,7 @@
 # Date-Aware Claude
 
 [![CI](https://github.com/CatKingAC/date-aware-claude/actions/workflows/ci.yml/badge.svg)](https://github.com/CatKingAC/date-aware-claude/actions/workflows/ci.yml)
+[![smithery badge](https://smithery.ai/badge/caj201100/date-aware-claude)](https://smithery.ai/servers/caj201100/date-aware-claude)
 
 An MCP server that gives Claude reliable access to the current date and
 time.
